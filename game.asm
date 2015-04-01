@@ -165,7 +165,7 @@ gameInit
 	rts
 moveDown1
 	lda paddle1
-	cmp #$c0
+	cmp #$98
 	beq stallPaddle
 	ldy #0
 	lda #space
@@ -182,7 +182,7 @@ moveDown1
 	jmp getKey
 moveUp1
 	lda paddle1
-	cmp #$00
+	cmp #$28
 	beq stallPaddle
 	ldy #0
 	lda #space
@@ -199,7 +199,7 @@ moveUp1
 	jmp getKey
 moveDown2
 	lda paddle2
-	cmp #$e7
+	cmp #$bf
 	beq stallPaddle
 	ldy #0
 	lda #space
@@ -216,7 +216,7 @@ moveDown2
 	jmp getKey
 moveUp2	
 	lda paddle2
-	cmp #$27
+	cmp #$4f
 	beq stallPaddle
 	ldy #0
 	lda #space
@@ -232,23 +232,7 @@ moveUp2
 	sta (paddle2),Y
 	jmp getKey
 stallPaddle
-;	lda paddle1
-;	sta paddle1
-;	lda paddle1+1
-;	sta paddle1+1
 	jmp getKey
-;errorCheck??????????????????????? TODO: MAKE BOUNDS FOR SCREEN ?????????????????????????
-;highError
-;	ldx #paddle1+1
-;	cpx #$70
-;	beq lowError
-;lowError
-;	ldx #paddle1
-;	cpx #$00
-;	beq errorFound
-;	jmp moveDown1
-;errorFound
-;	jmp polling
 
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
