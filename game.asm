@@ -2,7 +2,7 @@
 ; Course:               CpSc 370
 ; Instructor:           Dr. Conlon
 ; Date started:         February 8, 2015
-; Last modification:    February 25, 2015
+; Last modification:    March 31, 2015
 ; Purpose of program:	Basic subroutines for the purpose of designing 
 ;							a 6502 Program 2-D game. Video output with some
 ;							utilizing pointers in zero-page for memory mapping
@@ -14,7 +14,6 @@
         .TF game.prg,BIN ; Object file and format
 
 space   	= $20 
-box     	= 230
 home    	= $7000         ;Address of home on video screen
 line2		= $7028
 line3		= $7050
@@ -24,8 +23,7 @@ homeh   	= $70
 scrend  	= $73e7         ;Address of bottom right of video screen
 screndl 	= $e7
 screndh 	= $73
-rowsize 	= 40            ;Screen is 25 rows by 40 columns.
-rowcnt  	= 25
+ballPos		= $71a4
 pointer		= $02			;pointer in zero-page
 paddle1		= $04
 paddle2		= $06
@@ -117,6 +115,8 @@ showBeginning		;Starting point for pong paddle
 	lda begin,X		;String from below
 	sta line2		;Bottom left
 	sta scrend-40
+	lda pongBall,X
+	sta ballPos
 	ldy #1
 screenBounds
 	ldx #0
@@ -164,6 +164,9 @@ getKey
 gameInit
 	rts
 moveDown1
+	lda paddle1
+	cmp #$c0
+	beq stallPaddle
 	ldy #0
 	lda #space
 	sta (paddle1),Y
@@ -177,7 +180,10 @@ moveDown1
 	lda begin,X
 	sta (paddle1),Y
 	jmp getKey
-moveUp1	
+moveUp1
+	lda paddle1
+	cmp #$00
+	beq stallPaddle
 	ldy #0
 	lda #space
 	sta (paddle1),Y
@@ -192,6 +198,9 @@ moveUp1
 	sta (paddle1),Y
 	jmp getKey
 moveDown2
+	lda paddle2
+	cmp #$e7
+	beq stallPaddle
 	ldy #0
 	lda #space
 	sta (paddle2),Y
@@ -206,6 +215,9 @@ moveDown2
 	sta (paddle2),Y
 	jmp getKey
 moveUp2	
+	lda paddle2
+	cmp #$27
+	beq stallPaddle
 	ldy #0
 	lda #space
 	sta (paddle2),Y
@@ -219,9 +231,28 @@ moveUp2
 	lda begin,X
 	sta (paddle2),Y
 	jmp getKey
+stallPaddle
+;	lda paddle1
+;	sta paddle1
+;	lda paddle1+1
+;	sta paddle1+1
+	jmp getKey
+;errorCheck??????????????????????? TODO: MAKE BOUNDS FOR SCREEN ?????????????????????????
+;highError
+;	ldx #paddle1+1
+;	cpx #$70
+;	beq lowError
+;lowError
+;	ldx #paddle1
+;	cpx #$00
+;	beq errorFound
+;	jmp moveDown1
+;errorFound
+;	jmp polling
 
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
 enterGame	.AS 'PRESS ENTER TO PLAY'
 begin		.AS '+'
 scrnBound	.AS '-'
+pongBall	.AS '.'
