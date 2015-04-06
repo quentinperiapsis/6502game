@@ -2,7 +2,7 @@
 ; Course:               CpSc 370
 ; Instructor:           Dr. Conlon
 ; Date started:         February 8, 2015
-; Last modification:    March 31, 2015
+; Last modification:    April 5, 2015
 ; Purpose of program:	Basic subroutines for the purpose of designing 
 ;							a 6502 Program 2-D game. Video output with some
 ;							utilizing pointers in zero-page for memory mapping
@@ -24,9 +24,13 @@ scrend  	= $73e7         ;Address of bottom right of video screen
 screndl 	= $e7
 screndh 	= $73
 ballPos		= $71a4
+ballPosL	= $a4
+ballPosH	= $71
+ballDir		= $01
 pointer		= $02			;pointer in zero-page
 paddle1		= $04
 paddle2		= $06
+ballPosPtr	= $08
 iobase 		= $8800 		;6551 ACIA base address, data register
 iostat 		= iobase+1 		;Keyboard status register
 iocmd 		= iobase+2 		;Keyboard command register
@@ -41,18 +45,58 @@ enterKey	= $0d
 		.OR $0300
 start	cld             ;Set binary mode.
 	jsr initGame
-	jsr initScreen		;Clear the screen
+	jsr getKey
+	jsr initScreen		
 	jsr showBeginning
-	jsr polling		
+	jsr initPointers
+gameLoop
+	jsr getKey
+	jsr moveBall
+	jmp gameLoop
 	brk
 	
-initScreen			;Clear the screen by using spaces
+initGame
+	jsr initScreen
+	ldy #17			
+	ldx #0
+titlePrint
+	lda gameTitle,X	
+	iny
+	cpy #22	
+	beq devInfo
+	sta home,Y
+	inx
+	jmp titlePrint
+devInfo
+	ldy #3
+	ldx #0
+infoLoop
+	lda developers,X
+	iny
+	cpy #37
+	beq gameStart
+	sta line2,Y
+	inx
+	jmp infoLoop
+gameStart
+	ldy #10
+	ldx #0
+enterLoop
+	lda enterGame,X
+	iny
+	cpy #30
+	beq initPointers
+	sta line3,Y
+	inx
+	jmp enterLoop
+
+initScreen			
 	lda #homel
-	sta pointer		;low byte of pointer in zero-page
+	sta pointer		
 	lda #homeh
-	sta pointer+1	;high byte in zero-page
+	sta pointer+1	
 	ldy #$ff
-	lda #space		;Load space
+	lda #space	
 lowClr				
 	ldx pointer+1
 	cpx #$74
@@ -75,45 +119,10 @@ endScreen
 	ldy #$e8
 	jmp lowClr
 	
-initGame
-	jsr initScreen
-	ldy #17			;Center the text
+showBeginning
 	ldx #0
-titlePrint
-	lda gameTitle,X	;String index
-	iny
-	cpy #22			;End of string
-	beq devInfo
-	sta home,Y
-	inx
-	jmp titlePrint
-devInfo
-	ldy #3
-	ldx #0
-infoLoop
-	lda developers,X
-	iny
-	cpy #37
-	beq gameStart
-	sta line2,Y
-	inx
-	jmp infoLoop
-gameStart
-	ldy #10
-	ldx #0
-gameLoop
-	lda enterGame,X
-	iny
-	cpy #30
-	beq polling
-	sta line3,Y
-	inx
-	jmp gameLoop
-	
-showBeginning		;Starting point for pong paddle
-	ldx #0
-	lda begin,X		;String from below
-	sta line2		;Bottom left
+	lda begin,X	
+	sta line2
 	sta scrend-40
 	lda pongBall,X
 	sta ballPos
@@ -130,20 +139,26 @@ screenBounds
 initialized
 	rts
 	
-polling	
+initPointers	
 	cli
 	lda #$0b
-	sta iocmd			;Set command status
+	sta iocmd	
 	lda #$1a
 	sta ioctrl
 	lda #homel
-	sta paddle1		;low byte of pointer in zero-page
+	sta paddle1	
 	lda #homeh
-	sta paddle1+1	;high byte in zero-page
+	sta paddle1+1
 	lda #screndl
 	sta paddle2
 	lda #screndh
 	sta paddle2+1
+	lda #ballPosL
+	sta ballPosPtr
+	lda #ballPosH
+	sta ballPosPtr+1
+	rts
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 getKey
 	lda iostat
 	and #$08
@@ -160,7 +175,9 @@ getKey
 	beq moveDown2
 	cmp #keyI
 	beq moveUp2
-	jmp getKey
+	rts
+noKey
+	rts
 gameInit
 	rts
 moveDown1
@@ -179,7 +196,8 @@ moveDown1
 	sta paddle1+1
 	lda begin,X
 	sta (paddle1),Y
-	jmp getKey
+;	jmp getKey
+	rts
 moveUp1
 	lda paddle1
 	cmp #$28
@@ -196,7 +214,7 @@ moveUp1
 	sta paddle1+1
 	lda begin,X
 	sta (paddle1),Y
-	jmp getKey
+	rts
 moveDown2
 	lda paddle2
 	cmp #$bf
@@ -213,7 +231,7 @@ moveDown2
 	sta paddle2+1
 	lda begin,X
 	sta (paddle2),Y
-	jmp getKey
+	rts
 moveUp2	
 	lda paddle2
 	cmp #$4f
@@ -230,10 +248,53 @@ moveUp2
 	sta paddle2+1
 	lda begin,X
 	sta (paddle2),Y
-	jmp getKey
+	rts
 stallPaddle
 	jmp getKey
-
+	
+moveBall
+	lda ballDir
+	cmp #$01
+	beq moveRight
+	cmp homel
+	beq moveLeft
+moveRight
+	lda #$01
+	sta ballDir
+	lda #space
+	sta (ballPosPtr),Y
+	clc
+	lda #1
+	adc ballPosPtr
+	sta ballPosPtr
+	lda #0
+	adc ballPosPtr+1
+	sta ballPosPtr+1
+	lda ballPosPtr
+	cmp paddle2
+	beq moveLeft
+	lda pongBall,X
+	sta (ballPosPtr),Y
+	rts
+moveLeft
+	lda #$00
+	sta ballDir
+	lda ballPosPtr
+	cmp paddle1
+	beq moveRight
+	lda #space
+	sta (ballPosPtr),Y
+	sec
+	lda ballPosPtr
+	sbc #1
+	sta ballPosPtr
+	lda ballPosPtr+1
+	sbc #0
+	sta ballPosPtr+1
+	lda pongBall,X
+	sta (ballPosPtr),Y
+	rts
+	
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
 enterGame	.AS 'PRESS ENTER TO PLAY'
