@@ -51,6 +51,9 @@ start	cld             ;Set binary mode.
 	jsr initPointers
 gameLoop
 	jsr getKey
+	jsr delayLoop
+	jsr delayLoop
+	jsr delayLoop
 	jsr moveBall
 	jmp gameLoop
 	brk
@@ -158,11 +161,11 @@ initPointers
 	lda #ballPosH
 	sta ballPosPtr+1
 	rts
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 getKey
 	lda iostat
 	and #$08
-	beq getKey
+	beq counter
 	sta iobase
 	lda iobase
 	cmp #enterKey
@@ -176,8 +179,12 @@ getKey
 	cmp #keyI
 	beq moveUp2
 	rts
-noKey
+counter
 	rts
+;	ldx #100
+;	dex
+;	bne counter
+;	jmp moveBall
 gameInit
 	rts
 moveDown1
@@ -294,7 +301,19 @@ moveLeft
 	lda pongBall,X
 	sta (ballPosPtr),Y
 	rts
-	
+
+delayLoop
+	ldy #100000
+	ldx #100000
+delay
+	dex
+	bne delay
+	dey
+	bne delay
+	jmp delayOver
+delayOver
+	rts
+
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
 enterGame	.AS 'PRESS ENTER TO PLAY'
