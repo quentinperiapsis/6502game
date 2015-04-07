@@ -274,7 +274,7 @@ moveRight
 	cmp paddle1
 	beq reDraw1
 	cmp paddle2
-	beq moveLeft
+	beq moveLeftCheck
 	lda #space
 	sta (ballPosPtr),Y
 continueMove1
@@ -287,6 +287,14 @@ continueMove1
 	sta ballPosPtr+1
 	lda pongBall,X
 	sta (ballPosPtr),Y
+	rts
+moveLeftCheck
+	lda ballPosPtr+1
+	cmp paddle2+1
+	beq cnfrmLeft
+	rts
+cnfrmLeft
+	jsr moveLeft
 	rts
 reDraw1
 	lda ballPosPtr+1
@@ -304,7 +312,7 @@ moveLeft
 	cmp paddle2
 	beq reDraw2
 	cmp paddle1
-	beq moveRight
+	beq moveRightCheck
 	lda #space
 	sta (ballPosPtr),Y
 continueMove2
@@ -317,6 +325,14 @@ continueMove2
 	sta ballPosPtr+1
 	lda pongBall,X
 	sta (ballPosPtr),Y
+	rts
+moveRightCheck
+	lda ballPosPtr+1
+	cmp paddle1+1
+	beq cnfrmRight
+	rts
+cnfrmRight
+	jsr moveRight
 	rts
 reDraw2
 	lda ballPosPtr+1
