@@ -26,7 +26,6 @@ screndh 	= $73
 ballPos		= $71a4
 ballPosL	= $a4
 ballPosH	= $71
-ballDir		= $01
 pointer		= $02			;pointer in zero-page
 paddle1		= $04
 paddle2		= $06
@@ -272,8 +271,11 @@ moveRight
 	lda ballPosPtr
 	cmp paddle2
 	beq moveLeft
+	cmp paddle1
+	beq reDraw1
 	lda #space
 	sta (ballPosPtr),Y
+continueMove1
 	clc
 	lda #1
 	adc ballPosPtr
@@ -284,14 +286,21 @@ moveRight
 	lda pongBall,X
 	sta (ballPosPtr),Y
 	rts
+reDraw1
+	lda begin,X
+	sta (ballPosPtr),Y
+	jmp continueMove1
 moveLeft
 	lda #$00
 	sta ballDir
 	lda ballPosPtr
 	cmp paddle1
 	beq moveRight
+	cmp paddle2
+	beq reDraw2
 	lda #space
 	sta (ballPosPtr),Y
+continueMove2
 	sec
 	lda ballPosPtr
 	sbc #1
@@ -302,6 +311,10 @@ moveLeft
 	lda pongBall,X
 	sta (ballPosPtr),Y
 	rts
+reDraw2
+	lda begin,X
+	sta (ballPosPtr),Y
+	jmp continueMove2
 	
 delayLoop
 	jsr delayInit
@@ -360,46 +373,9 @@ noPoint2
 	rts
 	
 	
-;moveRightUp
-;	lda #$01
-;	sta ballDir
-;	lda ballPosPtr
-;	cmp paddle2
-;	beq moveLeft
-;	lda #space
-;	sta (ballPosPtr),Y
-;	sec
-;	lda ballPosPtr
-;	sbc #39
-;	sta ballPosPtr
-;	lda ballPosPtr+1
-;	sbc #0
-;	sta ballPosPtr+1
-;	jmp ifBounce
-;continue
-;	lda pongBall,X
-;	sta (ballPosPtr),Y
-;	rts
-;ifBounce
-;	lda ballDir
-;	cmp #$01
-;	beq bounceBottomRight
-;bounceBottomRight
-;	ldx #40
-;bbr
-;	lda ballPosPtr
-;	cmp lastLine,X
-;	beq outside1
-;	dex
-;	cpx #0
-;	beq outside2
-;outside1
-;	jmp moveRightUp
-;outside2
-;	jmp continue
-;	rts
-	
 
+	
+ballDir		.DW $00
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
 enterGame	.AS 'PRESS ENTER TO PLAY'
