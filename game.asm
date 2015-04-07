@@ -46,13 +46,12 @@ enterKey	= $0d
 start	cld             ;Set binary mode.
 	jsr initGame
 	jsr getKey
+startNewPlay
+	jsr initPointers
 	jsr initScreen		
 	jsr showBeginning
-	jsr initPointers
 gameLoop
 	jsr getKey
-	jsr delayLoop
-	jsr delayLoop
 	jsr delayLoop
 	jsr moveBall
 	jmp gameLoop
@@ -160,6 +159,16 @@ initPointers
 	sta ballPosPtr
 	lda #ballPosH
 	sta ballPosPtr+1
+startGame
+	lda iostat
+	and #$08
+	beq startGame
+	sta iobase
+	lda iobase
+	cmp #enterKey
+	beq gameInit
+	jmp startGame
+gameInit
 	rts
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 getKey
@@ -168,8 +177,6 @@ getKey
 	beq counter
 	sta iobase
 	lda iobase
-	cmp #enterKey
-	beq gameInit
 	cmp #keyS
 	beq moveDown1
 	cmp #keyW
@@ -180,12 +187,6 @@ getKey
 	beq moveUp2
 	rts
 counter
-	rts
-;	ldx #100
-;	dex
-;	bne counter
-;	jmp moveBall
-gameInit
 	rts
 moveDown1
 	lda paddle1
@@ -203,7 +204,6 @@ moveDown1
 	sta paddle1+1
 	lda begin,X
 	sta (paddle1),Y
-;	jmp getKey
 	rts
 moveUp1
 	lda paddle1
@@ -260,6 +260,7 @@ stallPaddle
 	jmp getKey
 	
 moveBall
+	jsr isPoint
 	lda ballDir
 	cmp #$01
 	beq moveRight
@@ -268,6 +269,9 @@ moveBall
 moveRight
 	lda #$01
 	sta ballDir
+	lda ballPosPtr
+	cmp paddle2
+	beq moveLeft
 	lda #space
 	sta (ballPosPtr),Y
 	clc
@@ -277,9 +281,6 @@ moveRight
 	lda #0
 	adc ballPosPtr+1
 	sta ballPosPtr+1
-	lda ballPosPtr
-	cmp paddle2
-	beq moveLeft
 	lda pongBall,X
 	sta (ballPosPtr),Y
 	rts
@@ -301,18 +302,103 @@ moveLeft
 	lda pongBall,X
 	sta (ballPosPtr),Y
 	rts
-
+	
 delayLoop
+	jsr delayInit
+	jsr delayInit
+	jsr delayInit
+	rts
+	
+delayInit
 	ldy #100000
 	ldx #100000
 delay
 	dex
+	nop
 	bne delay
 	dey
+	nop
 	bne delay
 	jmp delayOver
 delayOver
 	rts
+	
+isPoint
+	lda ballDir
+	cmp #homel
+	beq isPointPlyr2
+	cmp #$01
+	beq isPointPlyr1
+	rts
+isPointPlyr2
+	lda ballPosPtr
+	cmp #$90
+	beq isContact1
+	rts
+isContact1
+	lda paddle1
+	cmp ballPosPtr
+	beq noPoint1
+	bne isPoint2
+isPoint2
+	jmp startNewPlay
+noPoint1
+	rts	
+isPointPlyr1
+	lda ballPosPtr
+	cmp #$b7
+	beq isContact2
+	rts
+isContact2
+	lda paddle2
+	cmp ballPosPtr
+	beq noPoint2
+	bne isPoint1
+isPoint1
+	jmp startNewPlay
+noPoint2
+	rts
+	
+	
+;moveRightUp
+;	lda #$01
+;	sta ballDir
+;	lda ballPosPtr
+;	cmp paddle2
+;	beq moveLeft
+;	lda #space
+;	sta (ballPosPtr),Y
+;	sec
+;	lda ballPosPtr
+;	sbc #39
+;	sta ballPosPtr
+;	lda ballPosPtr+1
+;	sbc #0
+;	sta ballPosPtr+1
+;	jmp ifBounce
+;continue
+;	lda pongBall,X
+;	sta (ballPosPtr),Y
+;	rts
+;ifBounce
+;	lda ballDir
+;	cmp #$01
+;	beq bounceBottomRight
+;bounceBottomRight
+;	ldx #40
+;bbr
+;	lda ballPosPtr
+;	cmp lastLine,X
+;	beq outside1
+;	dex
+;	cpx #0
+;	beq outside2
+;outside1
+;	jmp moveRightUp
+;outside2
+;	jmp continue
+;	rts
+	
 
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
