@@ -122,16 +122,18 @@ endScreen
 	
 showBeginning
 	ldx #0
-	lda begin,X	
+	lda leftPaddle,X	
 	sta line2
+	lda rightPaddle,X
 	sta scrend-40
 	lda pongBall,X
 	sta ballPos
 	ldy #1
 screenBounds
 	ldx #0
-	lda scrnBound,X
+	lda uprScrnBnd,X
 	sta home,Y
+	lda lowScrnBnd,X
 	sta lastLine,Y
 	iny
 	cpy #39
@@ -201,7 +203,7 @@ moveDown1
 	lda #0
 	adc paddle1+1
 	sta paddle1+1
-	lda begin,X
+	lda leftPaddle,X
 	sta (paddle1),Y
 	rts
 moveUp1
@@ -218,7 +220,7 @@ moveUp1
 	lda paddle1+1
 	sbc #0
 	sta paddle1+1
-	lda begin,X
+	lda leftPaddle,X
 	sta (paddle1),Y
 	rts
 moveDown2
@@ -235,7 +237,7 @@ moveDown2
 	lda #0
 	adc paddle2+1
 	sta paddle2+1
-	lda begin,X
+	lda rightPaddle,X
 	sta (paddle2),Y
 	rts
 moveUp2	
@@ -252,7 +254,7 @@ moveUp2
 	lda paddle2+1
 	sbc #0
 	sta paddle2+1
-	lda begin,X
+	lda rightPaddle,X
 	sta (paddle2),Y
 	rts
 stallPaddle
@@ -261,18 +263,18 @@ stallPaddle
 moveBall
 	jsr isPoint
 	lda ballDir
+	cmp #$00
+	beq moveLeft
 	cmp #$01
 	beq moveRight
-	cmp homel
-	beq moveLeft
 moveRight
 	lda #$01
 	sta ballDir
 	lda ballPosPtr
-	cmp paddle2
-	beq moveLeft
 	cmp paddle1
 	beq reDraw1
+	cmp paddle2
+	beq moveLeft
 	lda #space
 	sta (ballPosPtr),Y
 continueMove1
@@ -287,17 +289,22 @@ continueMove1
 	sta (ballPosPtr),Y
 	rts
 reDraw1
-	lda begin,X
+	lda ballPosPtr+1
+	cmp paddle1+1
+	beq cnfrmReDraw1
+	rts
+cnfrmReDraw1
+	lda leftPaddle,X
 	sta (ballPosPtr),Y
 	jmp continueMove1
 moveLeft
 	lda #$00
 	sta ballDir
 	lda ballPosPtr
-	cmp paddle1
-	beq moveRight
 	cmp paddle2
 	beq reDraw2
+	cmp paddle1
+	beq moveRight
 	lda #space
 	sta (ballPosPtr),Y
 continueMove2
@@ -312,7 +319,12 @@ continueMove2
 	sta (ballPosPtr),Y
 	rts
 reDraw2
-	lda begin,X
+	lda ballPosPtr+1
+	cmp paddle2+1
+	beq cnfrmReDraw2
+	rts
+cnfrmReDraw2
+	lda rightPaddle,X
 	sta (ballPosPtr),Y
 	jmp continueMove2
 	
@@ -370,15 +382,14 @@ isContact2
 isPoint1
 	jmp startNewPlay
 noPoint2
-	rts
-	
-	
+	rts	
 
-	
 ballDir		.DW $00
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
 enterGame	.AS 'PRESS ENTER TO PLAY'
-begin		.AS '+'
-scrnBound	.AS '-'
+leftPaddle	.AS 'Q'
+rightPaddle	.AS 'R'
+uprScrnBnd	.AS '/'
+lowScrnBnd	.AS '\'
 pongBall	.AS '.'
