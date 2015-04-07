@@ -23,9 +23,9 @@ homeh   	= $70
 scrend  	= $73e7         ;Address of bottom right of video screen
 screndl 	= $e7
 screndh 	= $73
-ballPos		= $71a4
-ballPosL	= $a4
-ballPosH	= $71
+ballPos		= $7244
+ballPosL	= $44
+ballPosH	= $72
 pointer		= $02			;pointer in zero-page
 paddle1		= $04
 paddle2		= $06
@@ -264,10 +264,22 @@ moveBall
 	jsr isPoint
 	lda ballDir
 	cmp #$00
-	beq moveLeft
+	beq moveLeftDown
 	cmp #$01
-	beq moveRight
-moveRight
+	beq moveRD
+	cmp #$02
+	beq moveRU
+;moveLD
+;	jsr moveLeftDown
+;	rts
+moveRD
+	jsr moveRightDown
+	rts
+moveRU
+	jsr moveRightUp
+	rts
+	
+moveRightDown
 	lda #$01
 	sta ballDir
 	lda ballPosPtr
@@ -275,16 +287,21 @@ moveRight
 	beq reDraw1
 	cmp paddle2
 	beq moveLeftCheck
+	ldy #0
+	lda (ballPosPtr),Y
+	cmp #$2f
+	beq drawContactTop1
 	lda #space
 	sta (ballPosPtr),Y
 continueMove1
 	clc
-	lda #1
+	lda #41
 	adc ballPosPtr
 	sta ballPosPtr
 	lda #0
 	adc ballPosPtr+1
 	sta ballPosPtr+1
+	jsr isBounce
 	lda pongBall,X
 	sta (ballPosPtr),Y
 	rts
@@ -294,7 +311,7 @@ moveLeftCheck
 	beq cnfrmLeft
 	rts
 cnfrmLeft
-	jsr moveLeft
+	jsr moveLeftDown
 	rts
 reDraw1
 	lda ballPosPtr+1
@@ -305,7 +322,12 @@ cnfrmReDraw1
 	lda leftPaddle,X
 	sta (ballPosPtr),Y
 	jmp continueMove1
-moveLeft
+drawContactTop1
+	lda uprScrnBnd,X
+	sta (ballPosPtr),Y
+	jmp continueMove1
+	
+moveLeftDown
 	lda #$00
 	sta ballDir
 	lda ballPosPtr
@@ -323,6 +345,7 @@ continueMove2
 	lda ballPosPtr+1
 	sbc #0
 	sta ballPosPtr+1
+;	jsr isBounce
 	lda pongBall,X
 	sta (ballPosPtr),Y
 	rts
@@ -332,7 +355,7 @@ moveRightCheck
 	beq cnfrmRight
 	rts
 cnfrmRight
-	jsr moveRight
+	jsr moveRightDown
 	rts
 reDraw2
 	lda ballPosPtr+1
@@ -343,6 +366,56 @@ cnfrmReDraw2
 	lda rightPaddle,X
 	sta (ballPosPtr),Y
 	jmp continueMove2
+	
+
+moveRightUp
+	lda #$02
+	sta ballDir
+	lda ballPosPtr
+	cmp paddle1
+	beq reDraw3
+	cmp paddle2
+	beq moveLeftCheck2
+	ldy #0
+	lda (ballPosPtr),Y
+	cmp #$5c
+	beq drawContactBtm1
+	lda #space
+	sta (ballPosPtr),Y
+continueMove3
+	sec
+	lda ballPosPtr
+	sbc #39
+	sta ballPosPtr
+	lda ballPosPtr+1
+	sbc #0
+	sta ballPosPtr+1
+	jsr isBounce
+	lda pongBall,X
+	sta (ballPosPtr),Y
+	rts
+moveLeftCheck2
+	lda ballPosPtr+1
+	cmp paddle2+1
+	beq cnfrmLeft2
+	rts
+cnfrmLeft2
+	jsr moveLeftDown
+	rts
+reDraw3
+	lda ballPosPtr+1
+	cmp paddle1+1
+	beq cnfrmReDraw3
+	rts
+cnfrmReDraw3
+	lda leftPaddle,X
+	sta (ballPosPtr),Y
+	jmp continueMove3
+drawContactBtm1
+	lda lowScrnBnd,X
+	sta (ballPosPtr),Y
+	jmp continueMove3
+	
 	
 delayLoop
 	jsr delayInit
@@ -399,6 +472,25 @@ isPoint1
 	jmp startNewPlay
 noPoint2
 	rts	
+
+isBounce
+	ldy #0
+	lda (ballPosPtr),Y
+	cmp #$5c
+	beq bounceUp
+	cmp #$2f
+	beq bounceDown
+	rts
+bounceUp
+	jsr moveRightUp
+	rts
+bounceDown
+	lda ballDir
+	cmp #$02
+	beq bounceDownRight
+bounceDownRight
+	jsr moveRightDown
+	rts
 
 ballDir		.DW $00
 gameTitle	.AS 'PONG'
