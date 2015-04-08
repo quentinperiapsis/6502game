@@ -80,12 +80,12 @@ infoLoop
 	inx
 	jmp infoLoop
 gameStart
-	ldy #10
+	ldy #7
 	ldx #0
 enterLoop
 	lda enterGame,X
 	iny
-	cpy #30
+	cpy #33
 	beq initPointers
 	sta line3,Y
 	inx
@@ -725,7 +725,7 @@ pointPlr1
 ballDir		.DW $00
 gameTitle	.AS 'PONG'
 developers	.AS 'BY QUENTIN PANGER & RYAN CALDWELL'
-enterGame	.AS 'PRESS ENTER TO PLAY'
+enterGame	.AS 'PRESS ENTER TWICE TO PLAY'
 leftPaddle	.AS 'Q'
 rightPaddle	.AS 'R'
 uprScrnBnd	.AS '/'
