@@ -123,9 +123,9 @@ endScreen
 showBeginning
 	ldx #0
 	lda leftPaddle,X	
-	sta line2
+	sta $7208
 	lda rightPaddle,X
-	sta scrend-40
+	sta $722F
 	lda pongBall,X
 	sta ballPos
 	ldy #1
@@ -148,13 +148,13 @@ initPointers
 	sta iocmd	
 	lda #$1a
 	sta ioctrl
-	lda #homel
+	lda #$08
 	sta paddle1	
-	lda #homeh
+	lda #$72
 	sta paddle1+1
-	lda #screndl
+	lda #$2f
 	sta paddle2
-	lda #screndh
+	lda #$72
 	sta paddle2+1
 	lda #ballPosL
 	sta ballPosPtr
@@ -269,9 +269,9 @@ moveBall
 	beq moveRD
 	cmp #$02
 	beq moveRU
-;moveLD
-;	jsr moveLeftDown
-;	rts
+moveLD
+	jsr moveLeftDown
+	rts
 moveRD
 	jsr moveRightDown
 	rts
@@ -437,42 +437,6 @@ delay
 delayOver
 	rts
 	
-isPoint
-	lda ballDir
-	cmp #homel
-	beq isPointPlyr2
-	cmp #$01
-	beq isPointPlyr1
-	rts
-isPointPlyr2
-	lda ballPosPtr
-	cmp #$90
-	beq isContact1
-	rts
-isContact1
-	lda paddle1
-	cmp ballPosPtr
-	beq noPoint1
-	bne isPoint2
-isPoint2
-	jmp startNewPlay
-noPoint1
-	rts	
-isPointPlyr1
-	lda ballPosPtr
-	cmp #$b7
-	beq isContact2
-	rts
-isContact2
-	lda paddle2
-	cmp ballPosPtr
-	beq noPoint2
-	bne isPoint1
-isPoint1
-	jmp startNewPlay
-noPoint2
-	rts	
-
 isBounce
 	ldy #0
 	lda (ballPosPtr),Y
@@ -491,6 +455,272 @@ bounceDown
 bounceDownRight
 	jsr moveRightDown
 	rts
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+isPoint
+	lda ballDir
+	cmp #$00
+	beq isPointPlyr2
+	cmp #$01
+	beq isPointPlyr1
+	cmp #$02
+	beq isPointPlyr1
+	rts
+isPointPlyr2
+	lda ballPosPtr+1
+	cmp #$70
+	beq p2Q1
+	cmp #$71
+	beq p2Q2
+	cmp #$72
+	beq p2Q3
+	cmp #$73
+	beq p2Q4
+	rts
+p2Q1
+	jsr point2InQtr1
+	rts
+p2Q2
+	jsr point2InQtr2
+	rts
+p2Q3
+	jsr point2InQtr3
+	rts
+p2Q4
+	jsr point2InQtr4
+	rts
+isPointPlyr1
+	lda ballPosPtr+1
+	cmp #$70
+	beq pQ1
+	cmp #$71
+	beq pQ2
+	cmp #$72
+	beq pQ3
+	cmp #$73
+	beq pQ4
+	rts
+pQ1
+	jsr pointInQtr1
+	rts
+pQ2
+	jsr pointInQtr2
+	rts
+pQ3
+	jsr pointInQtr3
+	rts
+pQ4
+	jsr pointInQtr4
+	rts
+point2InQtr1
+	lda paddle1
+	cmp ballPosPtr
+	beq nP
+	lda ballPosPtr
+	cmp #$00
+	beq point2Qtr1
+	lda ballPosPtr
+	cmp #$28
+	beq point2Qtr1
+	lda ballPosPtr
+	cmp #$50
+	beq point2Qtr1
+	lda ballPosPtr
+	cmp #$78
+	beq point2Qtr1
+	lda ballPosPtr
+	cmp #$a0
+	beq point2Qtr1
+	lda ballPosPtr
+	cmp #$c8
+	beq point2Qtr1
+	lda ballPosPtr
+	cmp #$f0
+	beq point2Qtr1
+	rts
+nP
+	jsr noPoint
+	rts
+point2Qtr1
+	jsr pointPlr2
+	rts
+point2InQtr2
+	lda paddle1
+	cmp ballPosPtr
+	beq noPoint
+	lda ballPosPtr
+	cmp #$18
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$40
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$68
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$90
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$b8
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$e0
+	beq pointPlr2
+	rts
+point2InQtr3
+	lda paddle1
+	cmp ballPosPtr
+	beq noPoint
+	lda ballPosPtr
+	cmp #$08
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$30
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$58
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$80
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$a8
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$d0
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$f8
+	beq pointPlr2
+	rts
+point2InQtr4
+	lda paddle1
+	cmp ballPosPtr
+	beq noPoint
+	lda ballPosPtr
+	cmp #$20
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$48
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$70
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$98
+	beq pointPlr2
+	lda ballPosPtr
+	cmp #$c0
+	beq pointPlr2
+	rts
+noPoint
+	rts
+pointPlr2
+	jmp startNewPlay
+pointInQtr1
+	lda paddle2
+	cmp ballPosPtr
+	beq nP2
+	lda ballPosPtr
+	cmp #$27
+	beq pP1
+	lda ballPosPtr
+	cmp #$4f
+	beq pP1
+	lda ballPosPtr
+	cmp #$77
+	beq pP1
+	lda ballPosPtr
+	cmp #$9f
+	beq pP1
+	lda ballPosPtr
+	cmp #$c7
+	beq pP1
+	lda ballPosPtr
+	cmp #$ef
+	beq pP1
+	rts
+pP1
+	jsr pointPlr1
+	rts
+pointInQtr2
+	lda paddle2
+	cmp ballPosPtr
+	beq nP2
+	lda ballPosPtr
+	cmp #$17
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$3f
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$67
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$8f
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$b7
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$df
+	beq pointPlr1
+	rts
+nP2
+	jsr noPoint2
+pointInQtr3
+	lda paddle2
+	cmp ballPosPtr
+	beq noPoint2
+	lda ballPosPtr
+	cmp #$07
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$2f
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$57
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$7f
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$a7
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$cf
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$f7
+	beq pointPlr1
+	rts
+pointInQtr4
+	lda paddle2
+	cmp ballPosPtr
+	beq noPoint2
+	lda ballPosPtr
+	cmp #$1f
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$47
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$6f
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$97
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$bf
+	beq pointPlr1
+	lda ballPosPtr
+	cmp #$e7
+	beq pointPlr1
+	rts
+noPoint2
+	rts
+pointPlr1
+	jmp startNewPlay
+
 
 ballDir		.DW $00
 gameTitle	.AS 'PONG'
